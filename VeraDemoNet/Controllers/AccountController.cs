@@ -94,6 +94,13 @@ namespace VeraDemoNet.Controllers
         [HttpPost, ActionName("Login")]
         public ActionResult PostLogin(LoginView loginViewModel, string ReturnUrl = "")
         {
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
+                !Url.IsLocalUrl(ReturnUrl))
+            {
+                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}");
+                return RedirectToAction("Login");
+            }
+
             try
             {
                 if (ModelState.IsValid)
