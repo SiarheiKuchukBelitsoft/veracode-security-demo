@@ -573,7 +573,7 @@ namespace VeraDemoNet.Controllers
 
             var dbUser = new User
             {
-                Password = Md5Hash(user.Password),
+                Password = Sha256Hash(user.Password),
                 CreatedAt = DateTime.Now,
                 UserName = user.UserName,
                 BlabName = user.BlabName,

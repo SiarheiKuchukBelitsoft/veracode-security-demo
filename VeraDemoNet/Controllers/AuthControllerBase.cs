@@ -19,7 +19,7 @@ namespace VeraDemoNet.Controllers
             using (var dbContext = new BlabberDB())
             {
                 var found = dbContext.Database.SqlQuery<BasicUser>(
-                    "select username, real_name as realname, blab_name as blabname, is_admin as isadmin from users where username = @login and password='" + Md5Hash(passWord) + "';",
+                    "select username, real_name as realname, blab_name as blabname, is_admin as isadmin from users where username = @login and password='" + Sha256Hash(passWord) + "';",
                     new SqlParameter("@login", userName)).ToList();
 
                 if (found.Count != 0)
@@ -60,7 +60,7 @@ namespace VeraDemoNet.Controllers
                 }));
         }
 
-        protected static string Md5Hash(string input)
+        protected static string Sha256Hash(string input)
         {
             var sb = new StringBuilder();
             if (string.IsNullOrEmpty(input))
@@ -68,9 +68,9 @@ namespace VeraDemoNet.Controllers
                 return sb.ToString();
             }
 
-            using (MD5 md5 = MD5.Create())
+            using (var shaHash = SHA256Managed.Create())
             {
-                var retVal = md5.ComputeHash(Encoding.Unicode.GetBytes(input));
+                var retVal = shaHash.ComputeHash(Encoding.Unicode.GetBytes(input));
 
                 foreach (var t in retVal)
                 {
