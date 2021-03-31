@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Hosting;
 using System.Web.Mvc;
@@ -447,8 +448,15 @@ namespace VeraDemoNet.Controllers
         [HttpPost, ActionName("register")]
         public ActionResult PostRegister (string username)
         {
-            logger.Info("PostRegister processRegister");
             var registerViewModel = new RegisterViewModel();
+            Regex rg = new Regex(@"^[a-zA-Z0-9\s,]*$");
+            if (!rg.IsMatch(username))
+            {
+                registerViewModel.Error = "Characters!";
+                return View(registerViewModel);
+            }
+            logger.Info("PostRegister processRegister");
+            
 
             Session["username"] = username;
 
