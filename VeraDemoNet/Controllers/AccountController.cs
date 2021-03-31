@@ -33,6 +33,13 @@ namespace VeraDemoNet.Controllers
         [HttpGet, ActionName("Login")]
         public ActionResult GetLogin(string ReturnUrl = "")
         {
+            if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
+                !Url.IsLocalUrl(ReturnUrl))
+            {
+                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}");
+                return RedirectToAction("Login");
+            }
+
             logger.Info("Login page visited: " + ReturnUrl);
 
             if (IsUserLoggedIn())
