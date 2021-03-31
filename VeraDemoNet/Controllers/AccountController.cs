@@ -40,11 +40,11 @@ namespace VeraDemoNet.Controllers
             if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
                 !Url.IsLocalUrl(ReturnUrl))
             {
-                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}");
+                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}".ToLogStatement());
                 return RedirectToAction("Login");
             }
 
-            logger.Info("Login page visited: " + ReturnUrl);
+            logger.Info($"Login page visited: {ReturnUrl}".ToLogStatement());
 
             if (IsUserLoggedIn())
             {
@@ -76,7 +76,7 @@ namespace VeraDemoNet.Controllers
 
                 // Deserializes a stream into an object graph and return as a object.
                 deserializedUser = binaryFormatter.Deserialize(memoryStream) as CustomSerializeModel;
-                logger.Info("User details were retrieved for user: " + deserializedUser.UserName);
+                logger.Info($"User details were retrieved for user: {deserializedUser.UserName}".ToLogStatement());
             }
 
             Session["username"] = deserializedUser.UserName;
@@ -98,7 +98,7 @@ namespace VeraDemoNet.Controllers
             if (!string.IsNullOrWhiteSpace(ReturnUrl) &&
                 !Url.IsLocalUrl(ReturnUrl))
             {
-                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}");
+                logger.ErrorFormat($"Malformed login redirect: {ReturnUrl}".ToLogStatement());
                 return RedirectToAction("Login");
             }
 
@@ -111,7 +111,7 @@ namespace VeraDemoNet.Controllers
                     using (EventLog eventLog = new EventLog("Application"))
                     {
                         eventLog.Source = "Application";
-                        eventLog.WriteEntry("Entering PostLogin with target " + ReturnUrl + " and username " + loginViewModel.UserName, EventLogEntryType.Information, 101, 1);
+                        eventLog.WriteEntry($"Entering PostLogin {loginViewModel.UserName}".ToLogStatement(), EventLogEntryType.Information, 101, 1);
                     }
 
                     if (userDetails == null)
