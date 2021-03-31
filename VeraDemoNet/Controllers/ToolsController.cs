@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Web.Hosting;
@@ -8,6 +9,12 @@ using VeraDemoNet.Models;
 
 namespace VeraDemoNet.Controllers
 {
+    public enum FortuneType
+    {
+        Funny,
+        Offensive
+    }
+
     public class ToolsController : AuthControllerBase
     {
         protected readonly log4net.ILog logger;
@@ -29,7 +36,7 @@ namespace VeraDemoNet.Controllers
         }
 
         [HttpPost]
-        public ActionResult Tools(string host, string fortuneFile)
+        public ActionResult Tools(string host, FortuneType fortuneType)
         {
             if (IsUserLoggedIn() == false)
             {
@@ -39,7 +46,7 @@ namespace VeraDemoNet.Controllers
             var viewModel = new ToolViewModel();
             viewModel.Host = host;
             viewModel.PingResult = Ping(host);
-            viewModel.FortuneResult = Fortune(fortuneFile);
+            viewModel.FortuneResult = Fortune(fortuneType);
 
             return View("Tools", viewModel);
         }
@@ -54,20 +61,30 @@ namespace VeraDemoNet.Controllers
             var output = new StringBuilder();
             try
             {
-                // START BAD CODE
-                var fileName = "cmd.exe";
-                var arguments = "/c ping " + host;
-                // END BAD CODE
+                Ping pingSender = new Ping();
+                PingOptions options = new PingOptions();
 
-                var proc = CreateStdOutProcess(fileName, arguments);
+                // Use the default Ttl value which is 128,
+                // but change the fragmentation behavior.
+                options.DontFragment = true;
 
-                proc.ErrorDataReceived += delegate (object sender, DataReceivedEventArgs e) { output.AppendLine(e.Data); };
-                proc.OutputDataReceived += delegate (object sender, DataReceivedEventArgs e) { output.AppendLine(e.Data); };
-
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-                proc.WaitForExit();
+                // Create a buffer of 32 bytes of data to be transmitted.
+                string data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+                byte[] buffer = Encoding.ASCII.GetBytes(data);
+                int timeout = 120;
+                PingReply reply = pingSender.Send(host, timeout, buffer, options);
+                if (reply.Status == IPStatus.Success)
+                {
+                    output.AppendFormat("Address: {0}\n", reply.Address);
+                    output.AppendFormat("RoundTrip time: {0}\n", reply.RoundtripTime);
+                    output.AppendFormat("Time to live: {0}\n", reply.Options.Ttl);
+                    output.AppendFormat("Don't fragment: {0}\n", reply.Options.DontFragment);
+                    output.AppendFormat("Buffer size: {0}\n", reply.Buffer.Length);
+                }
+                else
+                {
+                    return "Host is unavailable";
+                }
             }
             catch (Exception ex)
             {
@@ -77,54 +94,21 @@ namespace VeraDemoNet.Controllers
             return output == null ? "" : output.ToString();
         }
 
-        private string Fortune(string fortuneFile)
+        private string Fortune(FortuneType fortuneType)
         {
+            var actualFileName = $"{fortuneType}.txt";
             var output = new StringBuilder();
-
-            if (string.IsNullOrEmpty(fortuneFile)) 
-            {
-                fortuneFile = "funny.txt";
-            }
 
             try
             {
-                // START BAD CODE
-                var fileName = "cmd.exe";
-                var arguments = "/c " + HostingEnvironment.MapPath("~/Resources/bin/fortune-go.exe") + " " + HostingEnvironment.MapPath("~/Resources/bin/" + fortuneFile);
-                // END BAD CODE
-
-                var proc = CreateStdOutProcess(fileName, arguments);
-
-                proc.ErrorDataReceived += delegate(object sender, DataReceivedEventArgs e) { output.Append(e.Data); };
-                proc.OutputDataReceived += delegate(object sender, DataReceivedEventArgs e) { output.Append(e.Data + "\n"); };
-
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
-                proc.WaitForExit();
+                var file = HostingEnvironment.MapPath("~/Resources/bin/" + actualFileName);
+                return System.IO.File.ReadAllText(file);
             }
             catch (Exception ex)
             {
                 logger.Error(ex);
             }
             return output == null ? "" : output.ToString();
-        }
-
-        private static Process CreateStdOutProcess(string filename, string arguments)
-        {
-            var proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = filename,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-            return proc;
         }
     }
 }
