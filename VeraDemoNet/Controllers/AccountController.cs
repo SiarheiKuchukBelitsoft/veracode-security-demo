@@ -9,6 +9,7 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization.Formatters.Soap;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Hosting;
@@ -48,7 +49,6 @@ namespace VeraDemoNet.Controllers
                 return GetLogOut();
             }
 
-
             var userDetailsCookie = Request.Cookies[COOKIE_NAME];
 
             if (userDetailsCookie == null || userDetailsCookie.Value.Length == 0)
@@ -67,15 +67,13 @@ namespace VeraDemoNet.Controllers
 
             using (MemoryStream memoryStream = new MemoryStream(unencodedUserDetails))
             {
-                var binaryFormatter = new BinaryFormatter();
+                var binaryFormatter = new SoapFormatter();
 
                 // set memory stream position to starting point
                 memoryStream.Position = 0;
 
                 // Deserializes a stream into an object graph and return as a object.
-                /* START BAD CODE */
                 deserializedUser = binaryFormatter.Deserialize(memoryStream) as CustomSerializeModel;
-                /* END BAD CODE */
                 logger.Info("User details were retrieved for user: " + deserializedUser.UserName);
             }
 
@@ -131,7 +129,7 @@ namespace VeraDemoNet.Controllers
 
                         using (var userModelStream = new MemoryStream())
                         {
-                            IFormatter formatter = new BinaryFormatter();
+                            IFormatter formatter = new SoapFormatter();
                             formatter.Serialize(userModelStream, userModel);
                             var faCookie =
                                 new HttpCookie(COOKIE_NAME, Convert.ToBase64String(userModelStream.GetBuffer()))
