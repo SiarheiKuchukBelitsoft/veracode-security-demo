@@ -286,8 +286,7 @@ namespace VeraDemoNet.Controllers
             return viewModel;
         }
 
-        [HttpPost, ActionName("Blabbers")]
-        public ActionResult PostBlabbers(string blabberUsername, string command)
+        private ActionResult ExecuteCommand(string blabberUsername, Func<DbConnection, string, IBlabberCommand> createCommand)
         {
             if (IsUserLoggedIn() == false)
             {
@@ -301,13 +300,8 @@ namespace VeraDemoNet.Controllers
                 using (var dbContext = new BlabberDB())
                 {
                     dbContext.Database.Connection.Open();
-
-                    var commandType = Type.GetType("VeraDemoNet.Commands." + UpperCaseFirst(command) + "Command");
-
-                    /* START BAD CODE */
-                    var cmdObj = (IBlabberCommand) Activator.CreateInstance(commandType, dbContext.Database.Connection, username);
-                    cmdObj.Execute(blabberUsername);
-                    /* END BAD CODE */
+                    var command = createCommand(dbContext.Database.Connection, username);
+                    command.Execute(blabberUsername);
                 }
             }
             catch (Exception ex)
@@ -315,11 +309,20 @@ namespace VeraDemoNet.Controllers
                 logger.Error(ex);
             }
 
-            var viewModel = PopulateBlabbersViewModel("blab_name ASC", username);
-
-            return View(viewModel);
+            return RedirectToAction("Blabbers");
         }
 
+        [HttpPost, ActionName("ignore")]
+        public ActionResult PostBlabbers(string blabberUsername)
+        {
+            return ExecuteCommand(blabberUsername, (connect, username) => new IgnoreCommand(connect, username));
+        }
+
+        [HttpPost, ActionName("listen")]
+        public ActionResult Listen(string blabberUsername)
+        {
+            return ExecuteCommand(blabberUsername, (connect, username) => new ListenCommand(connect, username));
+        }
 
         [HttpPost, ActionName("Blab")]
         public ActionResult PostBlab(int blabId, string comment)
