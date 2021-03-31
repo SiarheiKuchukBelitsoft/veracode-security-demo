@@ -1,4 +1,5 @@
-﻿@model VeraDemoNet.Models.SearchBlabsViewModel
+﻿@using System.Web.Security.AntiXss
+@model VeraDemoNet.Models.SearchBlabsViewModel
 
 @{
     ViewBag.Title = "Search Blabs";
@@ -57,12 +58,12 @@
                                 foreach (var blab in blabs)
                                 {
                                     <tr>
-                                        <td class="commenterName">
-                                            @blab.Blabber
-                                        </td>
-                                        <td class="comment">
-                                            @blab.Content
-                                        </td>
+                                                                    <td class="commenterName">
+                                                                        @blab.Blabber
+                                                                    </td>
+                                                                    <td class="comment">
+                                                                        @Html.Raw(AntiXssEncoder.HtmlEncode(blab.Content, true))
+                                                                    </td>
                                         <td class="commentPostDate">
                                             @(blab.BlabDateString)
                                         </td>

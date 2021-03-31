@@ -1,4 +1,5 @@
-﻿@using VeraDemoNet.Models
+﻿@using System.Web.Security.AntiXss
+@using VeraDemoNet.Models
 @model VeraDemoNet.Models.BlabViewModel
 
 @{
@@ -55,9 +56,7 @@
                                     </div>
                                     <div class="blockquote">
                                         <p class="">
-                                            @*START BAD CODE*@
-                                            "@Html.Raw(comment.Content)"
-                                            @*END BAD CODE*@
+                                            @Html.Raw(AntiXssEncoder.HtmlEncode(comment.Content, true))
                                         </p>
                                         <span class="date sub-text">by @(comment.Author.BlabName) on @comment.TimestampString</span><br>
                                     </div>

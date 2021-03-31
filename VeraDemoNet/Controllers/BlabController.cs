@@ -4,6 +4,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.Mvc;
 using VeraDemoNet.Commands;
 using VeraDemoNet.DataAccess;
@@ -195,6 +196,10 @@ namespace VeraDemoNet.Controllers
         [ActionName("Feed"), HttpPost]
         public ActionResult PostFeed(string blab)
         {
+            Regex tagRegex = new Regex(@"<\s*([^ >]+)[^>]*>.*?<\s*/\s*\1\s*>");
+            if (tagRegex.IsMatch(blab))
+                throw new Exception("Invalid data");
+
             if (IsUserLoggedIn() == false)
             {
                 return RedirectToLogin(HttpContext.Request.RawUrl);
