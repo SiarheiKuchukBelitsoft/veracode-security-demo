@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -302,13 +303,21 @@ namespace VeraDemoNet.Controllers
                     System.IO.File.Delete(oldImage);
                 }
 		
-                var extension = Path.GetExtension(file.FileName).ToLower();
+                var extension = ".png";
                 var newFilename = Path.Combine(imageDir, userName);
                 newFilename += extension;
 
                 logger.Info("Saving new profile image: " + newFilename);
 
                 file.SaveAs(newFilename);
+                try
+                {
+                    Image.FromFile(newFilename);
+                }
+                catch
+                {
+                    System.IO.File.Delete(newFilename);
+                }
             }
 
             Response.StatusCode = (int)HttpStatusCode.OK;
@@ -453,14 +462,23 @@ namespace VeraDemoNet.Controllers
 	    {
 		    logger.Info("Entering downloadImage");
 
+            if (Path.GetExtension(image) != ".png")
+            {
+                throw new Exception();
+            }
+
 	        if (IsUserLoggedIn() == false)
 	        {
 	            return RedirectToLogin(HttpContext.Request.RawUrl);
 	        }
 
             var imagePath = Path.Combine(HostingEnvironment.MapPath("~/Images/"), image); 
+            if (new FileInfo(imagePath).FullName != imagePath)
+            {
+                throw new Exception();
+            }
 
-		    logger.Info("Fetching profile image: " + imagePath);
+            logger.Info("Fetching profile image: " + imagePath);
 
 	        return File(imagePath, System.Net.Mime.MediaTypeNames.Application.Octet);
         }
